@@ -1,0 +1,2038 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BSU 2025</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background-color: #f5f5f5;
+        }
+        
+        /* Header Styles */
+        .site-header {
+            background: linear-gradient(135deg, #1a5f7a 0%, #2a9d8f 100%);
+            color: white;
+            padding: 0.8rem 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 1000;
+            height: 70px;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            height: 45px;
+            width: auto;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+            transition: transform 0.3s ease;
+        }
+        
+        .logo:hover {
+            transform: scale(1.1);
+        }
+
+        .logo-container img:first-child {
+            margin-right: 0;
+        }
+
+        .logo-container img:last-child {
+            margin-left: 0;
+        }
+
+        /* Logo BJN khusus
+        .logo-bjn {
+             Tambahan styling khusus jika diperlukan 
+        }
+        */
+
+        /* Logo DLH khusus */
+        .logo-dlh {
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .judul {
+            color: white;
+            text-decoration: none;
+            font-size: 1.6rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .judul b {
+            color: #ffd166;
+            font-weight: 700;
+            font-size: 1.8rem;
+        }
+        
+        .judul c {
+            font-weight: 300;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        /* Map Container */
+        #map {
+            width: 100%;
+            height: calc(100vh - 70px);
+            position: relative;
+        }
+        
+        /* Search Container */
+        .search-container {
+            position: absolute;
+            top: 85px;
+            left: 70px;
+            z-index: 1000;
+            width: 350px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 10px;
+        }
+        
+        .search-box {
+            position: relative;
+        }
+        
+        #search-input {
+            padding: 12px 15px;
+            padding-left: 45px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        #search-input:focus {
+            outline: none;
+            border-color: #27ae60;
+            box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            z-index: 1;
+        }
+        
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            z-index: 1001;
+            border: 1px solid #eee;
+        }
+        
+        .search-result-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .search-result-item:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 8px;
+            text-transform: uppercase;
+        }
+        
+        .type-desa {
+            background-color: #e8f4f3;
+            color: #2a9d8f;
+        }
+        
+        .type-bsu {
+            background-color: #e8f4f3;
+            color: #27ae60;
+        }
+        
+        .result-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .result-detail {
+            font-size: 12px;
+            color: #666;
+            margin-left: 30px;
+        }
+        
+        /* Control Panel */
+        .control-panel {
+            position: absolute;
+            top: 85px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            width: 330px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .control-panel.minimized {
+            height: 50px;
+        }
+        
+        .panel-header {
+            background: linear-gradient(135deg, #1a5f7a 0%, #2a9d8f 100%);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .panel-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .minimize-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        
+        .minimize-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .panel-content {
+            padding: 20px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .control-panel.minimized .panel-content {
+            display: none;
+        }
+        
+        /* Section Styles */
+        .control-section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            color: #1a5f7a;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        /* Layer Controls */
+        .layer-control {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .layer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .layer-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .layer-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 22px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #27ae60;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
+        
+        /* Transparency Controls */
+        .transparency-control {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .transparency-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .transparency-value {
+            font-weight: 600;
+            color: #27ae60;
+            min-width: 35px;
+            text-align: right;
+        }
+        
+        .transparency-slider {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #dee2e6;
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .transparency-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #27ae60;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .transparency-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #27ae60;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        /* Basemap Controls */
+        .basemap-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .basemap-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .basemap-option:hover {
+            background: #e9ecef;
+        }
+        
+        .basemap-option.active {
+            border-color: #27ae60;
+            background: #e8f4f3;
+        }
+        
+        .basemap-radio {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            border: 2px solid #adb5bd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .basemap-option.active .basemap-radio {
+            border-color: #27ae60;
+        }
+        
+        .basemap-option.active .basemap-radio:after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: #27ae60;
+            border-radius: 50%;
+        }
+        
+        .basemap-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .basemap-name {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .basemap-desc {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* Filter Controls */
+        .filter-control {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .filter-search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            overflow: hidden;
+            transition: all 0.3s;
+            padding: 5px 0;
+        }
+
+        .filter-search-box:focus-within {
+            border-color: #27ae60;
+            box-shadow: 0 0 0 2px rgba(39, 174, 96, 0.2);
+        }
+
+        .filter-icon {
+            padding: 0 12px;
+            color: #666;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-right: 1px solid #eee;
+            height: 30px;
+        }
+
+        .clear-filter-btn {
+            background: none;
+            border: none;
+            padding: 0 12px;
+            height: 30px;
+            cursor: pointer;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+            border-right: 1px solid #eee;
+        }
+
+        .clear-filter-btn:hover {
+            color: #e62b00;
+            background-color: #f8f9fa;
+        }
+
+        .filter-dropdown {
+            flex: 1;
+            padding: 8px 15px;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            color: #333;
+            background: white;
+            cursor: pointer;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            padding-right: 35px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+        }
+
+        .filter-dropdown:focus {
+            outline: none;
+        }
+
+        .filter-stats {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .filter-stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .filter-stat-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-stat-value {
+            font-weight: 600;
+            color: #27ae60;
+        }
+
+        .filter-status {
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .filter-status[data-status="active"] {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .filter-status[data-status="inactive"] {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+
+        /* Statistics Panel */
+        .stats-panel {
+            position: absolute;
+            bottom: 40px;
+            left: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            width: 280px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .stats-panel.minimized {
+            height: 50px;
+        }
+
+        .stats-header {
+            background: linear-gradient(135deg, #1a5f7a 0%, #2a9d8f 100%);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .stats-panel.minimized .panel-content {
+            display: none;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        
+        .stat-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #27ae60;
+        }
+        
+        .stat-subitem {
+            margin-left: 15px;
+            font-size: 13px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .stat-subvalue {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        /* Coordinate Display */
+        .coordinate-display {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            font-size: 12px;
+            color: #333;
+            font-family: monospace;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .coord-icon {
+            color: #27ae60;
+        }
+
+        /* Reset Zoom Control */
+        .leaflet-control-reset {
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+            margin-top: 10px;
+        }
+
+        .leaflet-control-reset a {
+            background-color: white;
+            border-radius: 4px;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            display: block;
+            text-align: center;
+            align-items: center;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .leaflet-control-reset a:hover {
+            background-color: #f4f4f4;
+        }
+        
+        /* Leaflet Controls */
+        .leaflet-control-zoom {
+            border: none !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15) !important;
+            border-radius: 8px !important;
+            overflow: hidden;
+        }
+        
+        .leaflet-control-zoom a {
+            width: 40px !important;
+            height: 40px !important;
+            line-height: 40px !important;
+            font-size: 20px !important;
+            background: white !important;
+            color: #333 !important;
+            border: none !important;
+            border-radius: 0 !important;
+        }
+        
+        .leaflet-control-zoom a:first-child {
+            border-bottom: 1px solid #eee !important;
+        }
+        
+        .leaflet-control-zoom a:hover {
+            background: #f8f9fa !important;
+            color: #27ae60 !important;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .site-header {
+                padding: 0.8rem 1rem;
+            }
+            
+            .logo {
+                height: 35px;
+            }
+
+            .logo-container {
+                gap: 8px;
+            }
+            
+            .judul {
+                font-size: 1.4rem;
+            }
+            
+            .judul b {
+                font-size: 1.5rem;
+            }
+            
+            .judul c {
+                font-size: 0.9rem;
+            }
+            
+            .search-container {
+                top: 75px;
+                left: 10px;
+                width: calc(100% - 20px);
+            }
+            
+            .control-panel {
+                top: 75px;
+                right: 10px;
+                width: calc(100% - 20px);
+            }
+            
+            .stats-panel {
+                bottom: 10px;
+                left: 10px;
+                width: calc(100% - 20px);
+            }
+            
+            .coordinate-display {
+                display: none;
+            }
+
+            /* Filter */
+            .filter-search-box {
+                padding: 3px 0;
+            }
+
+            .filter-icon {
+                padding: 0 10px;
+                font-size: 14px;
+                height: 26px;
+            }
+
+            .clear-filter-btn {
+                padding: 0 10px;
+                height: 26px;
+            }
+
+            .filter-dropdown {
+                font-size: 13px;
+                padding: 6px 12px;
+                padding-right: 30px;
+            }
+
+            .filter-stat-item {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header dengan Logo -->
+    <header class="site-header">
+        <div class="header-left">
+            <div class="logo-container">
+                <img src="css/images/logoBJN.png" alt="Logo Kabupaten Bojonegoro" class="logo logo-bjn">
+                <img src="css/images/logoDLH.jpg" alt="Logo DLH Bojonegoro" class="logo logo-dlh">
+            </div>
+            <h1>
+                <a class="judul">
+                    <b>webGIS 2025</b> <c>Sebaran Bank Sampah Unit (BSU) Kabupaten Bojonegoro</c>
+                </a>
+            </h1>
+        </div>
+    </header>
+    
+    <!-- Map Container -->
+    <div id="map"></div>
+    
+    <!-- Search Container -->
+    <div class="search-container">
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="search-input" placeholder="Cari Desa atau BSU...">
+            <div class="search-results" id="search-results"></div>
+        </div>
+    </div>
+    
+    <!-- Control Panel -->
+    <div class="control-panel" id="control-panel">
+        <div class="panel-header" id="panel-header">
+            <div class="panel-title">
+                <i class="fas fa-sliders-h"></i>
+                <span>Kontrol Peta</span>
+            </div>
+            <button class="minimize-btn" id="minimize-btn">
+                <i class="fas fa-chevron-up"></i>
+            </button>
+        </div>
+        <div class="panel-content" id="panel-content">
+            <!-- Layer Controls -->
+            <div class="control-section">
+                <div class="section-title">
+                    <i class="fas fa-layer-group"></i>
+                    <span>Kontrol Layer</span>
+                </div>
+                
+                <!-- Batas Desa Layer Control -->
+                <div class="layer-control">
+                    <div class="layer-header">
+                        <div class="layer-name">
+                            <div class="layer-icon" style="background-color: #2a9d8f;"></div>
+                            <span>Desa</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-desa" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="transparency-control">
+                        <div class="transparency-label">
+                            <span>Transparansi:</span>
+                            <span class="transparency-value" id="transparency-value-desa">40%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="40" class="transparency-slider" id="transparency-desa">
+                    </div>
+                </div>
+                
+                <!-- BSU Layer Control -->
+                <div class="layer-control">
+                    <div class="layer-header">
+                        <div class="layer-name">
+                            <div class="layer-icon" style="background-color: #27ae60;"></div>
+                            <span>BSU</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-bsu" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="transparency-control">
+                        <div class="transparency-label">
+                            <span>Transparansi:</span>
+                            <span class="transparency-value" id="transparency-value-bsu">80%</span>
+                        </div>
+                        <input type="range" min="0" max="100" value="80" class="transparency-slider" id="transparency-bsu">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Basemap Controls -->
+            <div class="control-section">
+                <div class="section-title">
+                    <i class="fas fa-map"></i>
+                    <span>Pilihan Basemap</span>
+                </div>
+                
+                <div class="basemap-controls">
+                    <div class="basemap-option active" data-basemap="osm">
+                        <div class="basemap-radio"></div>
+                        <div class="basemap-info">
+                            <div class="basemap-name">Peta Standar</div>
+                            <div class="basemap-desc">OpenStreetMap - tampilan standar</div>
+                        </div>
+                    </div>
+                    
+                    <div class="basemap-option" data-basemap="satellite">
+                        <div class="basemap-radio"></div>
+                        <div class="basemap-info">
+                            <div class="basemap-name">Citra Satelit</div>
+                            <div class="basemap-desc">Google Hybrid - citra satelit dengan label</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filter Status BSU -->
+            <div class="control-section">
+                <div class="section-title">
+                    <i class="fas fa-filter"></i>
+                    <span>Filter BSU</span>
+                </div>
+                
+                <div class="filter-control">
+                    <div class="filter-search-box">
+                        <i class="fas fa-chart-bar filter-icon"></i>
+                        <button class="clear-filter-btn" id="clear-filter-btn" title="Hapus filter">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <select id="filter-status-bsu" class="filter-dropdown">
+                            <option value="semua">Semua BSU</option>
+                            <option value="AKTIF">Aktif</option>
+                            <option value="TIDAK AKTIF">Tidak Aktif</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-stats">
+                        <div class="filter-stat-item">
+                            <span>BSU Ditampilkan:</span>
+                            <span class="filter-stat-value" id="bsu-displayed">0</span>
+                        </div>
+                        <div class="filter-stat-item">
+                            <span>Status Filter:</span>
+                            <span class="filter-status" id="filter-status">Tidak aktif</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Panel -->
+    <div class="stats-panel" id="stats-panel">
+        <div class="stats-header" id="stats-header">
+            <div class="panel-title">
+                <i class="fas fa-chart-bar"></i>
+                <span>Statistik BSU</span>
+            </div>
+            <button class="minimize-btn" id="stats-minimize-btn">
+                <i class="fas fa-chevron-up"></i>
+            </button>
+        </div>
+        <div class="panel-content" id="stats-content">
+            <div class="stat-item">
+                <span>Status BSU:</span>
+            </div>
+            <div class="stat-subitem">
+                <span>Aktif:</span>
+                <span class="stat-subvalue" id="bsu-aktif">0</span>
+            </div>
+            <div class="stat-subitem">
+                <span>Tidak Aktif:</span>
+                <span class="stat-subvalue" id="bsu-tidak-aktif">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Total BSU:</span>
+                <span class="stat-value" id="total-bsu">0</span>
+            </div>
+            <div class="stat-item">
+                <span>Skala Peta:</span>
+                <span class="stat-value" id="map-scale">1:100,000</span>
+            </div>
+            <div class="stat-item">
+                <span>Zoom Level:</span>
+                <span class="stat-value" id="zoom-level">11</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Coordinate Display -->
+    <div class="coordinate-display" id="coordinate-display">
+        <i class="fas fa-crosshairs coord-icon"></i>
+        <span id="coordinates">-7.1500, 111.8800</span>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Global variables
+        var map;
+        var layer_GoogleHybrid_0, layer_OSMStandard_1;
+        var layer_batas_desa_2, layer_BSU20251226_3;
+        var desaData = [], bsuData = [];
+        var currentBSUFilter = 'semua';
+        
+        // Initialize the map
+        function initializeMap() {
+            map = L.map('map', {
+                zoomControl: false,
+                maxZoom: 28,
+                minZoom: 1
+            }).setView([-7.1500, 111.8800], 9);
+            
+            map.attributionControl.setPrefix('<a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a>');
+            
+            // Setup base layers
+            setupBaseLayers();
+            
+            // Setup data layers
+            setupDataLayers();
+            
+            // Setup UI controls
+            setupUIControls();
+            
+            // Setup search functionality
+            setupSearchFunctionality();
+            
+            // Setup map events
+            setupMapEvents();
+            
+            // Initialize statistics
+            updateStatistics();
+            
+            // Force map update
+            setTimeout(function() {
+                map.invalidateSize();
+                document.getElementById('zoom-level').textContent = map.getZoom();
+            }, 100);
+        }
+        
+        // Setup base layers
+        function setupBaseLayers() {
+            // Google Hybrid
+            layer_GoogleHybrid_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+                opacity: 1.0,
+                attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+                minZoom: 1,
+                maxZoom: 28,
+                minNativeZoom: 0,
+                maxNativeZoom: 20
+            });
+            
+            // OSM Standard
+            layer_OSMStandard_1 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                opacity: 1.0,
+                attribution: '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap contributors, CC-BY-SA</a>',
+                minZoom: 1,
+                maxZoom: 28,
+                minNativeZoom: 0,
+                maxNativeZoom: 19
+            });
+            
+            // Add default basemap
+            layer_OSMStandard_1.addTo(map);
+        }
+        
+        // Setup data layers
+        function setupDataLayers() {
+            // Load Desa data
+            if (typeof json_batas_desa_2 !== 'undefined') {
+                desaData = json_batas_desa_2.features || [];
+                
+                // Create Desa layer with original colors
+                layer_batas_desa_2 = L.geoJson(json_batas_desa_2, {
+                    attribution: '',
+                    interactive: true,
+                    style: style_batas_desa_2_0,
+                    onEachFeature: function(feature, layer) {
+                        // Hapus prefix "Kecamatan " dari nilai KECAMATAN
+                        var kecamatanValue = (feature.properties['KECAMATAN'] || '');
+                        kecamatanValue = kecamatanValue.replace('Kecamatan ', '');
+                        
+                        var popupContent = '<table>' +
+                            '<tr><td><b>Kecamatan:</b></td><td>' + kecamatanValue + '</td></tr>' +
+                            '<tr><td><b>Desa:</b></td><td>' + (feature.properties['DESA'] || '') + '</td></tr>' +
+                            '<tr><td><b>Luas:</b></td><td>' + (feature.properties['LUASHA'] ? parseFloat(feature.properties['LUASHA']).toFixed(2) + ' ha' : '') + '</td></tr>' +
+                            '<tr><td><b>Jenis:</b></td><td>' + (feature.properties['JENIS'] || '') + '</td></tr>' +
+                            '</table>';
+                        layer.bindPopup(popupContent);
+                    }
+                });
+                
+                layer_batas_desa_2.addTo(map);
+            }
+            
+            // Process BSU data
+            if (typeof json_BSU20251226_3 !== 'undefined') {
+                bsuData = json_BSU20251226_3.features || [];
+                
+                // Create BSU layer
+                layer_BSU20251226_3 = L.geoJson(json_BSU20251226_3, {
+                    attribution: '',
+                    interactive: true,
+                    pointToLayer: function (feature, latlng) {
+                        return L.circleMarker(latlng, {
+                            radius: 8,
+                            fillColor: getBSUColor(feature),
+                            color: '#fff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Hilangkan baris STATUS BSU dari popup
+                        var popupContent = '<table>' +
+                            '<tr><td><b>No:</b></td><td>' + (feature.properties['No.'] || '') + '</td></tr>' +
+                            '<tr><td><b>Nama BSU:</b></td><td>' + (feature.properties['NAMA BANK SAMPAH'] || '') + '</td></tr>' +
+                            '<tr><td><b>Kecamatan:</b></td><td>' + (feature.properties['KECAMATAN'] || '') + '</td></tr>' +
+                            '<tr><td><b>Desa:</b></td><td>' + (feature.properties['DESA'] || '') + '</td></tr>' +
+                            '<tr><td><b>Status:</b></td><td>' + (feature.properties['STATUS'] || '') + '</td></tr>' +
+                            '</table>';
+                        layer.bindPopup(popupContent);
+                    }
+                });
+                
+                layer_BSU20251226_3.addTo(map);
+            }
+
+            // Set tampilan awal peta sesuai batas maksimal area batas_desa
+            if (layer_batas_desa_2) {
+                var desaLayerBounds = layer_batas_desa_2.getBounds();
+                map.fitBounds(desaLayerBounds);
+            }
+        }
+        
+        // Get color for BSU based on status
+        function getBSUColor(feature) {
+            var status = feature.properties['STATUS'];
+            switch(status) {
+                case 'AKTIF': return '#27ae60';
+                case 'TIDAK AKTIF': return '#a5a5a5'; 
+                default: return '#95a5a6';
+            }
+        }
+        
+        // Original style function for Desa layer (keeping original colors)
+        function style_batas_desa_2_0(feature) {
+            switch(String(feature.properties['KECAMATAN'])) {
+                case 'Kecamatan Balen':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(217,226,119,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Baureno':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(119,36,201,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Bojonegoro':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(214,65,130,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Bubulan':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(205,132,109,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Dander':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(40,143,221,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Gayam':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(224,109,232,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Gondang':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(58,201,240,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Kalitidu':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(173,240,111,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Kanor':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(204,153,112,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Kapas':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(87,75,229,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Kasiman':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(96,53,206,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Kedewan':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(57,210,46,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Kedungadem':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(229,84,207,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Kepohbaru':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(179,43,233,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Malo':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(124,202,95,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Margomulyo':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(181,211,112,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Ngambon':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(225,130,130,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Ngasem':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(99,201,203,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Ngraho':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(48,219,148,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Padangan':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(228,209,83,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Purwosari':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(103,117,207,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Sekar':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(228,95,124,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Sugihwaras':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(13,202,83,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Sukosewu':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(200,42,142,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Sumberrejo':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(223,179,92,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Tambakrejo':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(106,148,228,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Temayang':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(30,215,57,1.0)',
+                        interactive: true,
+                    };
+                case 'Kecamatan Trucuk':
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(33,237,196,1.0)',
+                        interactive: true,
+                    };
+                default:
+                    return {
+                        opacity: 1,
+                        color: 'rgba(35,35,35,1.0)',
+                        dashArray: '',
+                        lineCap: 'butt',
+                        lineJoin: 'miter',
+                        weight: 1.0, 
+                        fill: true,
+                        fillOpacity: 0.4,
+                        fillColor: 'rgba(42,157,143,1.0)',
+                        interactive: true,
+                    };
+            }
+        }
+        
+        // Setup UI controls
+        function setupUIControls() {
+            // Layer Toggle Controls
+            document.getElementById('toggle-desa').addEventListener('change', function(e) {
+                if (e.target.checked) {
+                    map.addLayer(layer_batas_desa_2);
+                } else {
+                    map.removeLayer(layer_batas_desa_2);
+                }
+            });
+            
+            document.getElementById('toggle-bsu').addEventListener('change', function(e) {
+                if (e.target.checked) {
+                    if (layer_BSU20251226_3) {
+                        map.addLayer(layer_BSU20251226_3);
+                    }
+                } else {
+                    if (layer_BSU20251226_3) {
+                        map.removeLayer(layer_BSU20251226_3);
+                    }
+                }
+            });
+            
+            // Transparency Controls for Desa
+            var desaTransparencySlider = document.getElementById('transparency-desa');
+            var desaTransparencyValue = document.getElementById('transparency-value-desa');
+            
+            desaTransparencySlider.addEventListener('input', function() {
+                var value = this.value;
+                desaTransparencyValue.textContent = value + '%';
+                
+                if (layer_batas_desa_2) {
+                    layer_batas_desa_2.setStyle({
+                        fillOpacity: value / 100,
+                        opacity: value / 100 * 0.8
+                    });
+                }
+            });
+            
+            // Initialize transparency value
+            desaTransparencySlider.dispatchEvent(new Event('input'));
+            
+            // Transparency Controls for BSU
+            var bsuTransparencySlider = document.getElementById('transparency-bsu');
+            var bsuTransparencyValue = document.getElementById('transparency-value-bsu');
+            
+            bsuTransparencySlider.addEventListener('input', function() {
+                var value = this.value;
+                bsuTransparencyValue.textContent = value + '%';
+                
+                if (layer_BSU20251226_3) {
+                    layer_BSU20251226_3.setStyle({
+                        fillOpacity: value / 100,
+                        opacity: value / 100 * 0.8
+                    });
+                }
+            });
+            
+            // Initialize transparency value
+            bsuTransparencySlider.dispatchEvent(new Event('input'));
+            
+            // Basemap Controls
+            var basemapOptions = document.querySelectorAll('.basemap-option');
+            
+            basemapOptions.forEach(function(option) {
+                option.addEventListener('click', function() {
+                    var basemap = this.getAttribute('data-basemap');
+                    
+                    basemapOptions.forEach(function(opt) {
+                        opt.classList.remove('active');
+                    });
+                    
+                    this.classList.add('active');
+                    
+                    if (basemap === 'osm') {
+                        map.removeLayer(layer_GoogleHybrid_0);
+                        map.addLayer(layer_OSMStandard_1);
+                    } else if (basemap === 'satellite') {
+                        map.removeLayer(layer_OSMStandard_1);
+                        map.addLayer(layer_GoogleHybrid_0);
+                    }
+                });
+            });
+            
+            // Control Panel Minimize Functionality
+            var controlPanel = document.getElementById('control-panel');
+            var minimizeBtn = document.getElementById('minimize-btn');
+            var panelHeader = document.getElementById('panel-header');
+            var minimizeIcon = minimizeBtn.querySelector('i');
+            
+            panelHeader.addEventListener('click', function() {
+                toggleControlPanel(controlPanel, minimizeIcon);
+            });
+            
+            minimizeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleControlPanel(controlPanel, minimizeIcon);
+            });
+
+            // Stats Panel Minimize Functionality
+            var statsPanel = document.getElementById('stats-panel');
+            var statsMinimizeBtn = document.getElementById('stats-minimize-btn');
+            var statsHeader = document.getElementById('stats-header');
+            var statsMinimizeIcon = statsMinimizeBtn.querySelector('i');
+
+            statsHeader.addEventListener('click', function() {
+                toggleStatsPanel(statsPanel, statsMinimizeIcon);
+            });
+
+            statsMinimizeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleStatsPanel(statsPanel, statsMinimizeIcon);
+            });
+
+            // Setup filter functionality
+            setupFilterFunctionality();
+
+            // Add Reset Zoom Control
+            setupResetZoomControl();
+        }
+        
+        function toggleControlPanel(panel, icon) {
+            if (panel.classList.contains('minimized')) {
+                panel.classList.remove('minimized');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                panel.classList.add('minimized');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+
+        function toggleStatsPanel(panel, icon) {
+            if (panel.classList.contains('minimized')) {
+                panel.classList.remove('minimized');
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                panel.classList.add('minimized');
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+
+        // Setup Reset Zoom Control
+        function setupResetZoomControl() {
+            // Buat custom control untuk reset zoom
+            var ResetZoomControl = L.Control.extend({
+                options: {
+                    position: 'topleft'
+                },
+
+                onAdd: function (map) {
+                    var container = L.DomUtil.create('div', 'leaflet-control leaflet-control-reset');
+                    
+                    var link = L.DomUtil.create('a', '', container);
+                    link.href = '#';
+                    link.title = 'Reset Zoom';
+                    link.innerHTML = '<i class="fas fa-home"></i>';
+                    
+                    L.DomEvent
+                        .on(link, 'mousedown dblclick', L.DomEvent.stopPropagation)
+                        .on(link, 'click', L.DomEvent.stop)
+                        .on(link, 'click', function () {
+                            if (layer_batas_desa_2) {
+                                var desaLayerBounds = layer_batas_desa_2.getBounds();
+                                map.fitBounds(desaLayerBounds);
+                            }
+                        });
+
+                    return container;
+                }
+            });
+
+            // Tambahkan kontrol reset zoom ke peta
+            var resetControl = new ResetZoomControl();
+            map.addControl(resetControl);
+
+            // Tambahkan kontrol zoom default di bawah kontrol reset
+            var zoomControl = L.control.zoom({
+                position: 'topleft'
+            }).addTo(map);
+        }
+        
+        // Setup search functionality
+        function setupSearchFunctionality() {
+            var searchInput = document.getElementById('search-input');
+            var searchResultsDiv = document.getElementById('search-results');
+            var allSearchItems = [];
+            
+            // Add Desa items
+            desaData.forEach(function(feature) {
+                if (feature.properties.DESA) {
+                    // Calculate centroid for polygon
+                    var layer = L.geoJSON(feature);
+                    var bounds = layer.getBounds();
+                    var center = bounds.getCenter();
+                    
+                    allSearchItems.push({
+                        type: 'desa',
+                        name: feature.properties.DESA,
+                        kecamatan: feature.properties.KECAMATAN || '',
+                        detail: 'Kecamatan: ' + (feature.properties.KECAMATAN || ''),
+                        latlng: center,
+                        feature: feature,
+                        searchText: (feature.properties.DESA + ' ' + (feature.properties.KECAMATAN || '')).toLowerCase()
+                    });
+                }
+            });
+            
+            // Add BSU items
+            bsuData.forEach(function(feature) {
+                if (feature.properties['NAMA BANK SAMPAH']) {
+                    allSearchItems.push({
+                        type: 'bsu',
+                        name: feature.properties['NAMA BANK SAMPAH'],
+                        desa: feature.properties.DESA || '',
+                        detail: 'Desa: ' + (feature.properties.DESA || '') + ' | Status: ' + (feature.properties.STATUS || ''),
+                        latlng: L.latLng(
+                            feature.geometry.coordinates[1], 
+                            feature.geometry.coordinates[0]
+                        ),
+                        feature: feature,
+                        searchText: (feature.properties['NAMA BANK SAMPAH'] + ' ' + (feature.properties.DESA || '') + ' ' + (feature.properties.KECAMATAN || '')).toLowerCase()
+                    });
+                }
+            });
+            
+            // Search input handler
+            searchInput.addEventListener('input', function(e) {
+                var query = e.target.value.toLowerCase().trim();
+                
+                if (query.length === 0) {
+                    searchResultsDiv.style.display = 'none';
+                    return;
+                }
+                
+                // Filter results
+                var filtered = allSearchItems.filter(function(item) {
+                    return item.searchText.includes(query);
+                }).slice(0, 15);
+                
+                // Display results
+                if (filtered.length > 0) {
+                    searchResultsDiv.innerHTML = filtered.map(function(item) {
+                        var typeClass = item.type === 'desa' ? 'type-desa' : 'type-bsu';
+                        var typeText = item.type === 'desa' ? 'DESA' : 'BSU';
+                        var icon = item.type === 'desa' ? 'fa-map' : 'fa-recycle';
+                        
+                        return `
+                            <div class="search-result-item" data-type="${item.type}" 
+                                 data-lat="${item.latlng.lat}" data-lng="${item.latlng.lng}" 
+                                 data-name="${item.name}">
+                                <div class="result-name">
+                                    <span class="result-type ${typeClass}">${typeText}</span>
+                                    <i class="fas ${icon}" style="margin-right: 5px;"></i>
+                                    ${item.name}
+                                </div>
+                                <div class="result-detail">${item.detail}</div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    searchResultsDiv.style.display = 'block';
+                    
+                    // Add click handlers to result items
+                    var resultItems = searchResultsDiv.querySelectorAll('.search-result-item');
+                    resultItems.forEach(function(item) {
+                        item.addEventListener('click', function() {
+                            var lat = parseFloat(this.getAttribute('data-lat'));
+                            var lng = parseFloat(this.getAttribute('data-lng'));
+                            var name = this.getAttribute('data-name');
+                            var type = this.getAttribute('data-type');
+                            
+                            // Zoom to location
+                            map.setView([lat, lng], type === 'desa' ? 13 : 16);
+                            
+                            searchResultsDiv.style.display = 'none';
+                            searchInput.value = name;
+                        });
+                    });
+                } else {
+                    searchResultsDiv.innerHTML = '<div class="search-result-item" style="text-align: center; color: #666;">Tidak ditemukan</div>';
+                    searchResultsDiv.style.display = 'block';
+                }
+            });
+            
+            // Hide results when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResultsDiv.contains(e.target)) {
+                    searchResultsDiv.style.display = 'none';
+                }
+            });
+            
+            // Clear search on Escape key
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    searchResultsDiv.style.display = 'none';
+                    searchInput.value = '';
+                }
+            });
+        }
+        
+        // Setup map events
+        function setupMapEvents() {
+            // Coordinate Display
+            map.on('mousemove', function(e) {
+                document.getElementById('coordinates').textContent = 
+                    `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
+            });
+            
+            // Map Scale and Zoom Level Display
+            map.on('zoomend', function() {
+                updateMapScale();
+                document.getElementById('zoom-level').textContent = map.getZoom();
+            });
+            
+            // Initial scale and zoom update
+            updateMapScale();
+            document.getElementById('zoom-level').textContent = map.getZoom();
+        }
+        
+        // Update map scale display
+        function updateMapScale() {
+            var zoom = map.getZoom();
+            var scale = Math.round(591657550 / Math.pow(2, zoom - 1));
+            document.getElementById('map-scale').textContent = 
+                '1:' + scale.toLocaleString();
+        }
+        
+        // Filter BSU based on status
+        function filterBSU(status) {
+            currentBSUFilter = status;
+            
+            // Remove current BSU layer from map
+            if (layer_BSU20251226_3) {
+                map.removeLayer(layer_BSU20251226_3);
+            }
+            
+            // Create filtered data
+            var filteredData = {
+                type: "FeatureCollection",
+                features: []
+            };
+            
+            if (status === 'semua') {
+                filteredData.features = bsuData;
+            } else {
+                filteredData.features = bsuData.filter(function(feature) {
+                    return feature.properties['STATUS'] === status;
+                });
+            }
+            
+            // Create new layer with filtered data
+            layer_BSU20251226_3 = L.geoJson(filteredData, {
+                attribution: '',
+                interactive: true,
+                pointToLayer: function (feature, latlng) {
+                    return L.circleMarker(latlng, {
+                        radius: 8,
+                        fillColor: getBSUColor(feature),
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+                },
+                onEachFeature: function(feature, layer) {
+                    // Hilangkan baris STATUS BSU dari popup
+                    var popupContent = '<table>' +
+                        '<tr><td><b>No:</b></td><td>' + (feature.properties['No.'] || '') + '</td></tr>' +
+                        '<tr><td><b>Nama BSU:</b></td><td>' + (feature.properties['NAMA BANK SAMPAH'] || '') + '</td></tr>' +
+                        '<tr><td><b>Kecamatan:</b></td><td>' + (feature.properties['KECAMATAN'] || '') + '</td></tr>' +
+                        '<tr><td><b>Desa:</b></td><td>' + (feature.properties['DESA'] || '') + '</td></tr>' +
+                        '<tr><td><b>Status:</b></td><td>' + (feature.properties['STATUS'] || '') + '</td></tr>' +
+                        '</table>';
+                    layer.bindPopup(popupContent);
+                }
+            });
+            
+            // Add layer to map if BSU toggle is on
+            var bsuToggle = document.getElementById('toggle-bsu');
+            if (bsuToggle.checked) {
+                layer_BSU20251226_3.addTo(map);
+            }
+            
+            // Update filter display
+            updateFilterDisplay(filteredData.features.length, status);
+        }
+
+        // Update filter display
+        function updateFilterDisplay(count, status) {
+            document.getElementById('bsu-displayed').textContent = count;
+            
+            var filterStatus = document.getElementById('filter-status');
+            if (status === 'semua') {
+                filterStatus.textContent = 'Tidak aktif';
+                filterStatus.setAttribute('data-status', 'inactive');
+            } else {
+                filterStatus.textContent = status;
+                filterStatus.setAttribute('data-status', 'active');
+            }
+        }
+
+        // Setup filter functionality
+        function setupFilterFunctionality() {
+            var filterDropdown = document.getElementById('filter-status-bsu');
+            var clearFilterBtn = document.getElementById('clear-filter-btn');
+            
+            // Filter dropdown change event
+            filterDropdown.addEventListener('change', function(e) {
+                var selectedValue = e.target.value;
+                filterBSU(selectedValue);
+                updateStatistics();
+            });
+            
+            // Clear filter button
+            clearFilterBtn.addEventListener('click', function() {
+                filterDropdown.value = 'semua';
+                filterBSU('semua');
+                updateStatistics();
+            });
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            // Get filtered data count
+            var displayedCount = 0;
+            if (currentBSUFilter === 'semua') {
+                displayedCount = bsuData.length;
+            } else {
+                displayedCount = bsuData.filter(function(feature) {
+                    return feature.properties['STATUS'] === currentBSUFilter;
+                }).length;
+            }
+            
+            // Update displayed count
+            document.getElementById('bsu-displayed').textContent = displayedCount;
+            
+            // Update total BSU
+            document.getElementById('total-bsu').textContent = bsuData.length;
+            
+            // Count BSU by status
+            var aktifCount = 0, tidakAktifCount = 0;
+            
+            bsuData.forEach(function(feature) {
+                var status = feature.properties['STATUS'];
+                switch(status) {
+                    case 'AKTIF': aktifCount++; break;
+                    case 'TIDAK AKTIF': tidakAktifCount++; break;
+                }
+            });
+            
+            // Update BSU per status
+            document.getElementById('bsu-aktif').textContent = aktifCount;
+            document.getElementById('bsu-tidak-aktif').textContent = tidakAktifCount;
+            
+            // Update filter status
+            var filterStatus = document.getElementById('filter-status');
+            if (currentBSUFilter === 'semua') {
+                filterStatus.textContent = 'Tidak aktif';
+                filterStatus.setAttribute('data-status', 'inactive');
+            } else {
+                filterStatus.textContent = currentBSUFilter;
+                filterStatus.setAttribute('data-status', 'active');
+            }
+        }
+        
+        // Initialize the map when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMap();
+        });
+    </script>
+    <script src="data/batas_desa_2.js"></script>
+    <script src="data/BSU20251226_3.js"></script>
+</body>
+</html>
